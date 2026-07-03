@@ -1,0 +1,25 @@
+{
+  "hook_event_name": "Status",
+  "session_id": "sample-session-id",
+  "transcript_path": "/Users/home/.claude/projects/sample/transcript.jsonl",
+  "cwd": "/Users/home/boxed",
+  "model": {
+    "id": "claude-sonnet-5",
+    "display_name": "Sonnet 5"
+  },
+  "workspace": {
+    "current_dir": "/Users/home/boxed",
+    "project_dir": "/Users/home/boxed"
+  },
+  "version": "1.0.0",
+  "output_style": {
+    "name": "default"
+  },
+  "cost": {
+    "total_cost_usd": 0.0842,
+    "total_duration_ms": 154000,
+    "total_api_duration_ms": 48000,
+    "total_lines_added": 37,
+    "total_lines_removed": 9
+  }
+}
