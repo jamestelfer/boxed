@@ -59,7 +59,8 @@ func readManaged() *settings {
 
 // readJSON decodes a settings file, returning nil for missing or malformed input.
 func readJSON(path string) *settings {
-	b, err := os.ReadFile(path)
+	// Paths are well-known Claude Code settings locations, not user-controlled input.
+	b, err := os.ReadFile(path) //nolint:gosec // G304: config paths are fixed, trusted locations
 	if err != nil {
 		return nil
 	}
