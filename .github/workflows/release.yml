@@ -1,0 +1,30 @@
+# jamestelfer/boxed — build/attest/publish on the v* tag pushed by release-please.
+# Delegates to the shared chinmina release kit, pinned to the verified-actions
+# branch (third-party actions SHA-pinned and reviewed).
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+# The caller sets the permission ceiling: a called reusable workflow can only
+# downgrade, never elevate. Grant exactly what goreleaser-release declares —
+# id-token for the octo-sts mint, contents:write to fill the release-please
+# draft, attestations:write to record keyless provenance.
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    uses: chinmina/.github/.github/workflows/goreleaser-release.yml@verified-actions # zizmor: ignore[secrets-inherit]
+    with:
+      # Keyless: mint the release-boxed token (and release-tap for homebrew)
+      # against the centralised trust policies instead of github.token/a PAT.
+      # Identities/scope are derived by convention — nothing passed.
+      token-source: octo-sts
+      # GitHub release + Homebrew + binstaller all enabled (workflow defaults).
+    # secrets: inherit is intentional — environment-scoped secrets must resolve
+    # inside the reusable workflow's environment-targeting job.
+    secrets: inherit
