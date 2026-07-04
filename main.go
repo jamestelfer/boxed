@@ -40,11 +40,11 @@ func projectDir(env func(string) string, getwd func() (string, error)) string {
 	return d
 }
 
-// renderStatus resolves the effective sandbox state and prints its styled label.
-func renderStatus() {
+// currentState resolves the effective sandbox state from the environment.
+func currentState() state {
 	proj := projectDir(os.Getenv, os.Getwd)
 	home, _ := os.UserHomeDir()
-	fmt.Print(render(resolveStatus(rootFS(), proj, home)))
+	return resolveStatus(rootFS(), proj, home)
 }
 
 // newCommand builds the root urfave/cli v3 command.
@@ -58,8 +58,22 @@ func newCommand() *cli.Command {
 				fmt.Fprintf(os.Stderr, "boxed: unexpected argument %q\n", cmd.Args().First())
 				return errReported
 			}
-			renderStatus()
+			fmt.Print(render(currentState()))
 			return nil
+		},
+		Commands: []*cli.Command{
+			{
+				Name:  "state",
+				Usage: "print the bare resolved state token (on|partial|off), unstyled",
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					if cmd.Args().Present() {
+						fmt.Fprintf(os.Stderr, "boxed: unexpected argument %q\n", cmd.Args().First())
+						return errReported
+					}
+					fmt.Println(currentState())
+					return nil
+				},
+			},
 		},
 	}
 }
