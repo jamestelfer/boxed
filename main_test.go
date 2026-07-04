@@ -48,8 +48,18 @@ func TestUnexpectedArgumentRejected(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestRenderParity(t *testing.T) {
-	assert.Equal(t, "\033[32m📦 sandboxed\033[0m", render(stateOn))
-	assert.Equal(t, "\033[33m😬 sandbox (escape allowed)\033[0m", render(statePartial))
-	assert.Equal(t, "\033[1;31m☢️ NOT sandboxed\033[0m", render(stateOff))
+// Golden: default output for each state. Visually identical to the historical
+// hardcoded labels; the only byte difference from the pre-lipgloss binary is
+// the reset sequence (\x1b[m vs \x1b[0m), which renders the same.
+func TestDefaultRenderGolden(t *testing.T) {
+	golden := map[state]string{
+		stateOn:      "\x1b[32m📦 sandboxed\x1b[m",
+		statePartial: "\x1b[33m😬 sandbox (escape allowed)\x1b[m",
+		stateOff:     "\x1b[1;31m☢️ NOT sandboxed\x1b[m",
+	}
+	for s, want := range golden {
+		out, err := render(s, "")
+		require.NoError(t, err)
+		assert.Equal(t, want, out, "state %s", s)
+	}
 }

@@ -34,24 +34,20 @@ func (s state) String() string {
 	}
 }
 
-// ANSI display attributes.
-const (
-	cGreen   = "\033[32m"
-	cYellow  = "\033[33m"
-	cRedBold = "\033[1;31m"
-	cReset   = "\033[0m"
-)
+// defaultFormats pins the starship-style format string for each state. They
+// reproduce the historical hardcoded labels/colours: green "sandboxed", yellow
+// "sandbox (escape allowed)", bold-red "NOT sandboxed".
+var defaultFormats = map[state]string{
+	stateOn:      "[📦 sandboxed](green)",
+	statePartial: "[😬 sandbox (escape allowed)](yellow)",
+	stateOff:     "[☢️ NOT sandboxed](bold red)",
+}
 
-// render returns the colored statusline label for a state.
-func render(s state) string {
-	var color, label string
-	switch s {
-	case stateOn:
-		color, label = cGreen, "📦 sandboxed"
-	case statePartial:
-		color, label = cYellow, "😬 sandbox (escape allowed)"
-	default:
-		color, label = cRedBold, "☢️ NOT sandboxed"
+// render returns the styled statusline label for a state. format overrides the
+// pinned default when non-empty. A malformed format string is a hard error.
+func render(s state, format string) (string, error) {
+	if format == "" {
+		format = defaultFormats[s]
 	}
-	return color + label + cReset
+	return renderFormat(format)
 }

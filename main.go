@@ -58,7 +58,12 @@ func newCommand() *cli.Command {
 				fmt.Fprintf(os.Stderr, "boxed: unexpected argument %q\n", cmd.Args().First())
 				return errReported
 			}
-			fmt.Print(render(currentState()))
+			out, err := render(currentState(), "")
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "boxed: %v\n", err)
+				return errReported
+			}
+			fmt.Print(out)
 			return nil
 		},
 		Commands: []*cli.Command{
