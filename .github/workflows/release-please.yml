@@ -1,0 +1,27 @@
+# jamestelfer/boxed — release-please trigger (keyless octo-sts path).
+# Delegates to the shared chinmina release kit, pinned to the verified-actions
+# branch (third-party actions SHA-pinned and reviewed).
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+# The caller sets the permission ceiling: a called reusable workflow can only
+# downgrade, never elevate. The reusable workflow needs id-token (octo-sts OIDC
+# mint) and contents:read (checkout) — grant exactly that. The write operations
+# (PR + tag) use the octo-sts-minted release-please-boxed token, not this one.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  release-please:
+    uses: chinmina/.github/.github/workflows/release-please.yml@verified-actions # zizmor: ignore[secrets-inherit]
+    with:
+      # Keyless: mint the release-please-boxed token against the centralised
+      # trust policies (identity/scope are derived by convention — nothing passed).
+      token-source: octo-sts
+    # secrets: inherit is intentional — environment-scoped secrets must resolve
+    # inside the reusable workflow's environment-targeting job.
+    secrets: inherit

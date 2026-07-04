@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/binary-install/binstaller/main/schema/InstallSpec.json
+# Asset names track .goreleaser.yaml:
+#   archives.name_template = {{ .ProjectName }}_{{ .Os }}_{{ .Arch }}  (tar.gz)
+#   checksum.name_template = checksums.txt
+# install.sh is a POSIX shell installer, so only the unix targets are listed
+# (goreleaser still builds/publishes windows zips for manual download).
+schema: v1
+name: boxed
+repo: jamestelfer/boxed
+default_version: latest
+asset:
+  template: ${NAME}_${OS}_${ARCH}${EXT}
+  default_extension: .tar.gz
+  binaries:
+  - name: boxed
+    path: boxed
+  naming_convention:
+    os: lowercase
+    arch: lowercase
+checksums:
+  algorithm: sha256
+  template: checksums.txt
+supported_platforms:
+- os: darwin
+  arch: amd64
+- os: darwin
+  arch: arm64
+- os: linux
+  arch: amd64
+- os: linux
+  arch: arm64
