@@ -38,7 +38,7 @@ binary or XML) — no `plutil` subprocess, so startup is sub-millisecond.
 ## Installation
 
 Every release ships provenance-attested archives, a self-contained install
-script, and a Homebrew formula. All download paths can be verified — see
+script, and a Homebrew cask. All download paths can be verified — see
 [Verifying releases](#verifying-releases).
 
 <details>
