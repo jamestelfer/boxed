@@ -53,12 +53,18 @@ func newCommand() *cli.Command {
 		Name:    "boxed",
 		Usage:   "print the effective Claude Code sandbox status as a styled label",
 		Version: buildVersion(),
+		Flags: []cli.Flag{
+			&cli.StringFlag{Name: "on", Usage: "format string for the 'on' (fully sandboxed) state"},
+			&cli.StringFlag{Name: "partial", Usage: "format string for the 'partial' (escape allowed) state"},
+			&cli.StringFlag{Name: "off", Usage: "format string for the 'off' (not sandboxed) state"},
+		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			if cmd.Args().Present() {
 				fmt.Fprintf(os.Stderr, "boxed: unexpected argument %q\n", cmd.Args().First())
 				return errReported
 			}
-			out, err := render(currentState(), "")
+			s := currentState()
+			out, err := render(s, cmd.String(s.String()))
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "boxed: %v\n", err)
 				return errReported
