@@ -16,103 +16,35 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"howett.net/plist"
 )
 
-const managedPlist = "/Library/Managed Preferences/com.anthropic.claudecode.plist"
-
-// ANSI display attributes.
-const (
-	cGreen   = "\033[32m"
-	cYellow  = "\033[33m"
-	cRedBold = "\033[1;31m"
-	cReset   = "\033[0m"
-)
-
-// settings mirrors only the sandbox keys we care about. The matching json and
-// plist tags let the same struct decode from settings files and managed prefs.
-type settings struct {
-	Sandbox *struct {
-		Enabled                  *bool `json:"enabled" plist:"enabled"`
-		AllowUnsandboxedCommands *bool `json:"allowUnsandboxedCommands" plist:"allowUnsandboxedCommands"`
-	} `json:"sandbox" plist:"sandbox"`
-}
-
-// readManaged decodes the managed-preferences plist (binary or XML) in-process,
-// returning nil if it is absent, unreadable, or malformed.
-func readManaged() *settings {
-	b, err := os.ReadFile(managedPlist)
-	if err != nil {
-		return nil
+// projectDir returns CLAUDE_PROJECT_DIR when set, otherwise the working
+// directory. env/getwd are injected so the fallback is testable.
+func projectDir(env func(string) string, getwd func() (string, error)) string {
+	if d := env("CLAUDE_PROJECT_DIR"); d != "" {
+		return d
 	}
-	var s settings
-	if _, err := plist.Unmarshal(b, &s); err != nil {
-		return nil
-	}
-	return &s
-}
-
-// readJSON decodes a settings file, returning nil for missing or malformed input.
-func readJSON(path string) *settings {
-	// Paths are well-known Claude Code settings locations, not user-controlled input.
-	b, err := os.ReadFile(path) //nolint:gosec // G304: config paths are fixed, trusted locations
-	if err != nil {
-		return nil
-	}
-	var s settings
-	if err := json.Unmarshal(b, &s); err != nil {
-		return nil
-	}
-	return &s
-}
-
-// resolve returns the first non-nil value produced by get across sources, which
-// are ordered highest precedence first.
-func resolve(sources []*settings, get func(*settings) *bool) *bool {
-	for _, s := range sources {
-		if s == nil || s.Sandbox == nil {
-			continue
-		}
-		if v := get(s); v != nil {
-			return v
-		}
-	}
-	return nil
+	d, _ := getwd()
+	return d
 }
 
 func main() {
-	projectDir := os.Getenv("CLAUDE_PROJECT_DIR")
-	if projectDir == "" {
-		projectDir, _ = os.Getwd()
-	}
+	proj := projectDir(os.Getenv, os.Getwd)
 	home, _ := os.UserHomeDir()
+
+	fsys := rootFS()
 
 	// Sources in descending precedence.
 	sources := []*settings{
-		readManaged(),
-		readJSON(filepath.Join(projectDir, ".claude", "settings.local.json")),
-		readJSON(filepath.Join(projectDir, ".claude", "settings.json")),
-		readJSON(filepath.Join(home, ".claude", "settings.json")),
+		readManaged(fsys),
+		readJSON(fsys, filepath.Join(proj, ".claude", "settings.local.json")),
+		readJSON(fsys, filepath.Join(proj, ".claude", "settings.json")),
+		readJSON(fsys, filepath.Join(home, ".claude", "settings.json")),
 	}
 
-	enabled := resolve(sources, func(s *settings) *bool { return s.Sandbox.Enabled })
-	allow := resolve(sources, func(s *settings) *bool { return s.Sandbox.AllowUnsandboxedCommands })
-
-	color, label := cRedBold, "☢️ NOT sandboxed"
-	switch {
-	case enabled == nil || !*enabled:
-		// off or unset
-	case allow != nil && !*allow:
-		color, label = cGreen, "📦 sandboxed"
-	default:
-		// enabled, but unsandboxed commands permitted (schema default is true)
-		color, label = cYellow, "😬 sandbox (escape allowed)"
-	}
-
-	fmt.Printf("%s%s%s", color, label, cReset)
+	state := resolveState(sources)
+	fmt.Print(render(state))
 }
