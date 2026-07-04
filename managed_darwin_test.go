@@ -3,6 +3,7 @@
 package main
 
 import (
+	"path/filepath"
 	"testing"
 	"testing/fstest"
 
@@ -42,4 +43,17 @@ func TestReadManagedDarwin(t *testing.T) {
 func TestReadManagedDarwinAbsent(t *testing.T) {
 	assert.Nil(t, readManaged(fstest.MapFS{}))
 	assert.Nil(t, readManaged(fstest.MapFS{fsPath(managedPlist): {Data: []byte("not a plist")}}))
+}
+
+// When the MDM plist and the file-based managed settings disagree, the MDM
+// value wins (managed tier: plist primary, file-based secondary).
+func TestMDMWinsOverFileBased(t *testing.T) {
+	fsys := fstest.MapFS{
+		fsPath(managedPlist): {Data: []byte(managedPlistXML)}, // enabled=true, allow=false → on
+		fsPath(filepath.Join(managedDir(), "managed-settings.json")): {
+			Data: []byte(`{"sandbox":{"enabled":false}}`), // off
+		},
+	}
+	sources := assembleSources(fsys, "/proj", "/home")
+	assert.Equal(t, stateOn, resolveState(sources))
 }
