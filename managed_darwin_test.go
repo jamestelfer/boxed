@@ -45,15 +45,15 @@ func TestReadManagedDarwinAbsent(t *testing.T) {
 	assert.Nil(t, readManaged(fstest.MapFS{fsPath(managedPlist): {Data: []byte("not a plist")}}))
 }
 
-// When the MDM plist and the file-based managed settings disagree, the MDM
-// value wins (managed tier: plist primary, file-based secondary).
-func TestMDMWinsOverFileBased(t *testing.T) {
+// The MDM plist and the file-based managed settings are distinct mechanisms
+// Claude Code does not define a merge for; when they disagree, boxed fails safe
+// to the least-protected status (plist on vs file off → off).
+func TestManagedCrossMechanismConflict(t *testing.T) {
 	fsys := fstest.MapFS{
 		fsPath(managedPlist): {Data: []byte(managedPlistXML)}, // enabled=true, allow=false → on
 		fsPath(filepath.Join(managedDir(), "managed-settings.json")): {
 			Data: []byte(`{"sandbox":{"enabled":false}}`), // off
 		},
 	}
-	sources := assembleSources(fsys, "/proj", "/home")
-	assert.Equal(t, stateOn, resolveState(sources))
+	assert.Equal(t, stateOff, resolveStatus(fsys, "/proj", "/home"))
 }

@@ -10,6 +10,19 @@ const (
 	stateOn                   // sandbox enabled, unsandboxed commands denied
 )
 
+// protection ranks states by how much sandboxing they guarantee: off is the
+// least protected, on the most. Used by the managed-tier fail-safe.
+func (s state) protection() int {
+	switch s {
+	case stateOn:
+		return 2
+	case statePartial:
+		return 1
+	default: // stateOff
+		return 0
+	}
+}
+
 func (s state) String() string {
 	switch s {
 	case stateOn:

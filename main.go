@@ -34,6 +34,5 @@ func main() {
 	proj := projectDir(os.Getenv, os.Getwd)
 	home, _ := os.UserHomeDir()
 
-	sources := assembleSources(rootFS(), proj, home)
-	fmt.Print(render(resolveState(sources)))
+	fmt.Print(render(resolveStatus(rootFS(), proj, home)))
 }
