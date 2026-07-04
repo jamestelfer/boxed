@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+builds:
+  - id: release
+    binary: boxed
+    main: .
+    flags:
+      - "-trimpath"
+    ldflags: "-w -s"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+checksum:
+  name_template: "checksums.txt"
+
+archives:
+  - id: archives
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+changelog:
+  use: github-native
+  sort: asc
+
+release:
+  # The shared pipeline requires the release to stay a draft that goreleaser
+  # fills in place: release-please creates the draft, attestation runs, then the
+  # wrapper publishes. Nothing downloadable exists without provenance behind it.
+  draft: true
+  # release-please creates the draft, but the tag is pushed separately so the
+  # draft has no published tag association. goreleaser's default lookup
+  # (GetReleaseByTag) cannot see draft releases and would create a duplicate;
+  # use_existing_draft makes it locate the draft by name and fill it instead.
+  use_existing_draft: true
+  mode: keep-existing
+  prerelease: auto
+
+homebrew_casks:
+  - name: boxed
+    directory: Casks
+    homepage: "https://github.com/jamestelfer/boxed"
+    description: "Prints the effective Claude Code sandbox status as a colored statusline label"
+    url:
+      verified: "github.com/jamestelfer/boxed"
+    repository:
+      owner: jamestelfer
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_GITHUB_TOKEN }}"
+    binaries:
+      - boxed
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/boxed"]
+          end
