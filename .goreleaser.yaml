@@ -57,6 +57,9 @@ homebrew_casks:
       owner: jamestelfer
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_GITHUB_TOKEN }}"
+    # Match release.prerelease: auto — don't publish the cask for prerelease/RC
+    # tags, only for stable releases.
+    skip_upload: auto
     binaries:
       - boxed
     hooks:
