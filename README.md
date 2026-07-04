@@ -35,14 +35,111 @@ Two deliberate details:
 The managed plist is decoded in-process ([`howett.net/plist`](https://github.com/DHowett/go-plist),
 binary or XML) — no `plutil` subprocess, so startup is sub-millisecond.
 
-## Build
+## Installation
+
+Every release ships provenance-attested archives, a self-contained install
+script, and a Homebrew formula. All download paths can be verified — see
+[Verifying releases](#verifying-releases).
+
+<details>
+<summary><strong>mise (recommended)</strong></summary>
+
+[mise](https://mise.jdx.dev/) installs directly from GitHub Releases via the
+[GitHub backend](https://mise.jdx.dev/dev-tools/backends/github.html):
+
+```sh
+mise use -g github:jamestelfer/boxed
+```
+
+</details>
+
+<details>
+<summary><strong>Install script</strong></summary>
+
+Each release ships a self-contained installer (generated with
+[binstaller](https://github.com/binary-install/binstaller)) that detects your
+platform and checks the download against checksums embedded in the script — no
+separate checksum file is fetched:
+
+```sh
+curl -fsSL https://github.com/jamestelfer/boxed/releases/latest/download/install.sh | sh
+```
+
+It installs to `~/.local/bin`; pass `-b` for another directory and a tag to pin
+a version:
+
+```sh
+curl -fsSL https://github.com/jamestelfer/boxed/releases/latest/download/install.sh \
+  | sh -s -- -b /usr/local/bin v0.1.0
+```
+
+The script carries a build-provenance attestation, so you can verify it before
+running it (see [Verifying releases](#verifying-releases)). This transitively
+covers the binary too: a verified script is guaranteed to hold the genuine
+checksums it then enforces on the download.
+
+```sh
+curl -fsSL -O https://github.com/jamestelfer/boxed/releases/latest/download/install.sh
+gh attestation verify install.sh --repo jamestelfer/boxed
+sh install.sh
+```
+
+</details>
+
+<details>
+<summary><strong>Homebrew (macOS)</strong></summary>
+
+```sh
+brew install jamestelfer/tap/boxed
+```
+
+</details>
+
+<details>
+<summary><strong>Manual download</strong></summary>
+
+Grab the archive for your platform from the
+[latest release](https://github.com/jamestelfer/boxed/releases/latest)
+(`boxed_<os>_<arch>.tar.gz`, or `.zip` on Windows), verify its provenance, then
+extract:
+
+```sh
+gh attestation verify boxed_linux_amd64.tar.gz --repo jamestelfer/boxed
+tar -xzf boxed_linux_amd64.tar.gz
+```
+
+Move the extracted `boxed` binary somewhere on your `$PATH`. See
+[Verifying releases](#verifying-releases) for details.
+
+</details>
+
+<details>
+<summary><strong>Build from source</strong></summary>
 
 Requires Go 1.26 (pinned via [mise](https://mise.jdx.dev)):
 
 ```sh
 mise install      # installs go 1.26 from mise.toml
-go build -o boxed .
+just build        # produces dist/boxed
 ```
+
+Add `dist/boxed` to your `$PATH`, or install wherever suits.
+
+</details>
+
+## Verifying releases
+
+Every published archive, the `install.sh` script, and `checksums.txt` carry a
+[SLSA build-provenance](https://slsa.dev/) attestation, signed keylessly through
+[Sigstore](https://www.sigstore.dev/) during the release workflow. Verify any
+artifact with an authenticated [GitHub CLI](https://cli.github.com/):
+
+```sh
+gh attestation verify "$ARTIFACT" --repo jamestelfer/boxed
+```
+
+A successful verification proves the artifact was built by this repository's
+release workflow and has not been altered since.
 
 ## Use as a statusline
 
