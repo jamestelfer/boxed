@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/fs"
+	"path/filepath"
 )
 
 // settings mirrors only the sandbox keys we care about. The matching json and
@@ -25,6 +26,20 @@ func readJSON(fsys fs.FS, path string) *settings {
 		return nil
 	}
 	return &s
+}
+
+// assembleSources builds the settings sources in descending precedence:
+// managed tier (MDM plist primary, then file-based managed-settings.json) →
+// <project>/.claude/settings.local.json → <project>/.claude/settings.json →
+// ~/.claude/settings.json.
+func assembleSources(fsys fs.FS, proj, home string) []*settings {
+	return []*settings{
+		readManaged(fsys),     // MDM plist (macOS only)
+		readManagedFile(fsys), // file-based managed-settings.json
+		readJSON(fsys, filepath.Join(proj, ".claude", "settings.local.json")),
+		readJSON(fsys, filepath.Join(proj, ".claude", "settings.json")),
+		readJSON(fsys, filepath.Join(home, ".claude", "settings.json")),
+	}
 }
 
 // resolve returns the first non-nil value produced by get across sources, which

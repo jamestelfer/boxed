@@ -18,7 +18,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 )
 
 // projectDir returns CLAUDE_PROJECT_DIR when set, otherwise the working
@@ -35,16 +34,6 @@ func main() {
 	proj := projectDir(os.Getenv, os.Getwd)
 	home, _ := os.UserHomeDir()
 
-	fsys := rootFS()
-
-	// Sources in descending precedence.
-	sources := []*settings{
-		readManaged(fsys),
-		readJSON(fsys, filepath.Join(proj, ".claude", "settings.local.json")),
-		readJSON(fsys, filepath.Join(proj, ".claude", "settings.json")),
-		readJSON(fsys, filepath.Join(home, ".claude", "settings.json")),
-	}
-
-	state := resolveState(sources)
-	fmt.Print(render(state))
+	sources := assembleSources(rootFS(), proj, home)
+	fmt.Print(render(resolveState(sources)))
 }

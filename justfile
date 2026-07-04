@@ -19,3 +19,7 @@ build *args:
 # Run linter
 lint:
     golangci-lint run ./...
+
+# Cross-platform snapshot build for every release matrix target (via goreleaser)
+xbuild *args:
+    goreleaser build --snapshot --clean {{args}}
