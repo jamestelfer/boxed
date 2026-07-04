@@ -46,8 +46,19 @@ Use Conventional Commits for all commit messages and PR titles. The `pr-title.ym
 
 ## Major dependencies
 
-Use Context7 for up-to-date documentation — do not guess at APIs.
+Use Context7 for up-to-date documentation — do not guess at APIs. Query the
+Context7 ID before using any unfamiliar or version-sensitive API (Go 1.26 and
+several of these post-date the knowledge cutoff).
 
-| Library | Notes |
-|---|---|
-| `howett.net/plist` | In-process plist decode (binary or XML) for managed preferences |
+| Library / source | Context7 ID | Notes |
+|---|---|---|
+| `howett.net/plist` (`dhowett/go-plist`) | `/dhowett/go-plist` | In-process plist decode (binary or XML) for managed preferences |
+| Claude Code docs / settings schema | `/websites/code_claude` | Sandbox semantics, settings precedence, managed-settings merge |
+| `stretchr/testify` | `/stretchr/testify` | Unit-test assertions (`assert`/`require`) |
+| `urfave/cli` v3 | `/urfave/cli` | CLI framework; built-in `--version` via `Command.Version` |
+| `charmbracelet/lipgloss` v2 | `/charmbracelet/lipgloss` | Terminal styling; `Render()` always emits full ANSI |
+| GoReleaser | `/websites/goreleaser` | Release/snapshot builds; default ldflags inject `main.version`/`commit`/`date` |
+| Starship | `/websites/starship_rs` | Custom-module integration docs |
+
+Not on Context7: `cship.dev` and Go stdlib (`io/fs`, `testing/fstest`,
+`runtime/debug`) — use upstream docs directly.
