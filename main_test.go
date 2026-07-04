@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProjectDirFallback(t *testing.T) {
@@ -20,6 +22,30 @@ func TestProjectDirFallback(t *testing.T) {
 		func() (string, error) { return "/from/cwd", nil },
 	)
 	assert.Equal(t, "/from/cwd", got)
+}
+
+// buildVersion never returns empty, so urfave always wires -v/--version.
+func TestBuildVersionNonEmpty(t *testing.T) {
+	assert.NotEmpty(t, buildVersion())
+	assert.NotEmpty(t, newCommand().Version)
+}
+
+// A valid no-subcommand invocation succeeds.
+func TestRootCommandRuns(t *testing.T) {
+	err := newCommand().Run(context.Background(), []string{"boxed"})
+	assert.NoError(t, err)
+}
+
+// An unknown flag is rejected (urfave usage error).
+func TestUnknownFlagRejected(t *testing.T) {
+	err := newCommand().Run(context.Background(), []string{"boxed", "--bogus"})
+	require.Error(t, err)
+}
+
+// An unexpected positional argument is rejected.
+func TestUnexpectedArgumentRejected(t *testing.T) {
+	err := newCommand().Run(context.Background(), []string{"boxed", "frobnicate"})
+	require.Error(t, err)
 }
 
 func TestRenderParity(t *testing.T) {
