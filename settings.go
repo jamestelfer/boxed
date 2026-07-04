@@ -28,18 +28,52 @@ func readJSON(fsys fs.FS, path string) *settings {
 	return &s
 }
 
-// assembleSources builds the settings sources in descending precedence:
-// managed tier (MDM plist primary, then file-based managed-settings.json) →
-// <project>/.claude/settings.local.json → <project>/.claude/settings.json →
-// ~/.claude/settings.json.
-func assembleSources(fsys fs.FS, proj, home string) []*settings {
-	return []*settings{
-		readManaged(fsys),     // MDM plist (macOS only)
-		readManagedFile(fsys), // file-based managed-settings.json
+// resolveStatus computes the effective sandbox state, highest authority first:
+//
+//  1. Managed tier: the MDM plist and the merged file-based managed settings.
+//     Claude Code does not define how these two mechanisms combine, so when both
+//     express a sandbox configuration and disagree, boxed fails safe to the
+//     least-protected status (off > partial > on) rather than over-reporting.
+//  2. Otherwise, per-key precedence across <project>/.claude/settings.local.json
+//     → <project>/.claude/settings.json → ~/.claude/settings.json.
+func resolveStatus(fsys fs.FS, proj, home string) state {
+	if s, ok := managedState(fsys); ok {
+		return s
+	}
+	nonManaged := []*settings{
 		readJSON(fsys, filepath.Join(proj, ".claude", "settings.local.json")),
 		readJSON(fsys, filepath.Join(proj, ".claude", "settings.json")),
 		readJSON(fsys, filepath.Join(home, ".claude", "settings.json")),
 	}
+	return resolveState(nonManaged)
+}
+
+// managedState returns the managed-tier state and whether any managed source
+// expressed a sandbox configuration. Each managed source's state is computed
+// independently; conflicts fail safe to the least-protected status.
+func managedState(fsys fs.FS) (state, bool) {
+	var states []state
+	for _, s := range []*settings{readManaged(fsys), fileBasedManaged(fsys)} {
+		if s != nil && s.Sandbox != nil {
+			states = append(states, resolveState([]*settings{s}))
+		}
+	}
+	if len(states) == 0 {
+		return 0, false
+	}
+	result := states[0]
+	for _, st := range states[1:] {
+		result = leastProtected(result, st)
+	}
+	return result, true
+}
+
+// leastProtected returns the weaker of two states (off < partial < on).
+func leastProtected(a, b state) state {
+	if a.protection() <= b.protection() {
+		return a
+	}
+	return b
 }
 
 // resolve returns the first non-nil value produced by get across sources, which

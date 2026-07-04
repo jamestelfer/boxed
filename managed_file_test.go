@@ -20,7 +20,7 @@ func TestFileBasedManagedOnly(t *testing.T) {
 	fsys := fstest.MapFS{
 		managedFilePath(): {Data: []byte(`{"sandbox":{"enabled":true,"allowUnsandboxedCommands":false}}`)},
 	}
-	s := readManagedFile(fsys)
+	s := fileBasedManaged(fsys)
 	require.NotNil(t, s)
 	assert.Equal(t, stateOn, resolveState([]*settings{s}))
 }
@@ -31,8 +31,8 @@ func TestFileBasedManagedMalformed(t *testing.T) {
 		managedFilePath():            {Data: []byte(`{ not json`)},
 		"home/.claude/settings.json": {Data: []byte(`{"sandbox":{"enabled":true,"allowUnsandboxedCommands":false}}`)},
 	}
-	sources := assembleSources(fsys, "/proj", "/home")
-	assert.Equal(t, stateOn, resolveState(sources)) // falls through to user settings
+	// No readable managed source → falls through to user settings.
+	assert.Equal(t, stateOn, resolveStatus(fsys, "/proj", "/home"))
 }
 
 // The managed tier sits above local/project/user: file-based managed off wins
@@ -42,6 +42,5 @@ func TestManagedAboveLocal(t *testing.T) {
 		managedFilePath():                  {Data: []byte(`{"sandbox":{"enabled":false}}`)},
 		"proj/.claude/settings.local.json": {Data: []byte(`{"sandbox":{"enabled":true,"allowUnsandboxedCommands":false}}`)},
 	}
-	sources := assembleSources(fsys, "/proj", "/home")
-	assert.Equal(t, stateOff, resolveState(sources))
+	assert.Equal(t, stateOff, resolveStatus(fsys, "/proj", "/home"))
 }
