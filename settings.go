@@ -28,24 +28,73 @@ func readJSON(fsys fs.FS, path string) *settings {
 	return &s
 }
 
-// resolveStatus computes the effective sandbox state, highest authority first:
+// nonManagedPaths returns the three non-managed settings file paths, highest
+// precedence first.
+func nonManagedPaths(proj, home string) [3]string {
+	return [3]string{
+		filepath.Join(proj, ".claude", "settings.local.json"),
+		filepath.Join(proj, ".claude", "settings.json"),
+		filepath.Join(home, ".claude", "settings.json"),
+	}
+}
+
+// resolveStatus computes the effective sandbox state; see determineState for
+// the precedence it follows.
+func resolveStatus(fsys fs.FS, proj, home string) state {
+	s, _, _ := determineState(fsys, proj, home)
+	return s
+}
+
+// sandboxEnabled and sandboxAllow are the accessors resolve() walks sources
+// with, shared by resolveState and determineState so both resolve the same
+// two keys the same way.
+func sandboxEnabled(s *settings) *bool { return s.Sandbox.Enabled }
+func sandboxAllow(s *settings) *bool   { return s.Sandbox.AllowUnsandboxedCommands }
+
+// keyOrigin is the resolved value of one sandbox key and which settings file
+// supplied it, for the doctor command. Origin is "" and Value is nil when no
+// non-managed source set the key (the schema default applies).
+type keyOrigin struct {
+	key    string
+	value  *bool
+	origin string
+}
+
+// determineState computes the effective sandbox state, highest authority
+// first, plus where it came from:
 //
 //  1. Managed tier: the MDM plist and the merged file-based managed settings.
 //     Claude Code does not define how these two mechanisms combine, so when both
 //     express a sandbox configuration and disagree, boxed fails safe to the
 //     least-protected status (off > partial > on) rather than over-reporting.
+//     This tier decides atomically — managed is true and keys is nil, since
+//     there's no single winning per-key value once two states are combined.
 //  2. Otherwise, per-key precedence across <project>/.claude/settings.local.json
-//     → <project>/.claude/settings.json → ~/.claude/settings.json.
-func resolveStatus(fsys fs.FS, proj, home string) state {
-	if s, ok := managedState(fsys); ok {
-		return s
+//     → <project>/.claude/settings.json → ~/.claude/settings.json. Each key is
+//     resolved independently, so keys names the specific settings file behind
+//     each one.
+func determineState(fsys fs.FS, proj, home string) (s state, managed bool, keys []keyOrigin) {
+	if st, ok := managedState(fsys); ok {
+		return st, true, nil
 	}
-	nonManaged := []*settings{
-		readJSON(fsys, filepath.Join(proj, ".claude", "settings.local.json")),
-		readJSON(fsys, filepath.Join(proj, ".claude", "settings.json")),
-		readJSON(fsys, filepath.Join(home, ".claude", "settings.json")),
+
+	paths := nonManagedPaths(proj, home)
+	sources := []*settings{readJSON(fsys, paths[0]), readJSON(fsys, paths[1]), readJSON(fsys, paths[2])}
+
+	label := func(i int) string {
+		if i < 0 {
+			return ""
+		}
+		return paths[i]
 	}
-	return resolveState(nonManaged)
+
+	enabled, ei := resolve(sources, sandboxEnabled)
+	allow, ai := resolve(sources, sandboxAllow)
+
+	return stateFromKeys(enabled, allow), false, []keyOrigin{
+		{"sandbox.enabled", enabled, label(ei)},
+		{"sandbox.allowUnsandboxedCommands", allow, label(ai)},
+	}
 }
 
 // managedState returns the managed-tier state and whether any managed source
@@ -76,28 +125,33 @@ func leastProtected(a, b state) state {
 	return b
 }
 
-// resolve returns the first non-nil value produced by get across sources, which
-// are ordered highest precedence first.
-func resolve(sources []*settings, get func(*settings) *bool) *bool {
-	for _, s := range sources {
+// resolve returns the first non-nil value produced by get across sources,
+// which are ordered highest precedence first, along with the index of the
+// source it came from (-1 if none matched).
+func resolve(sources []*settings, get func(*settings) *bool) (*bool, int) {
+	for i, s := range sources {
 		if s == nil || s.Sandbox == nil {
 			continue
 		}
 		if v := get(s); v != nil {
-			return v
+			return v, i
 		}
 	}
-	return nil
+	return nil, -1
 }
 
 // resolveState maps the resolved sandbox keys to one of the three states.
+func resolveState(sources []*settings) state {
+	enabled, _ := resolve(sources, sandboxEnabled)
+	allow, _ := resolve(sources, sandboxAllow)
+	return stateFromKeys(enabled, allow)
+}
+
+// stateFromKeys maps the resolved sandbox keys to one of the three states.
 //
 // Defaults (schemastore + code.claude.com): sandbox.enabled defaults false,
 // sandbox.allowUnsandboxedCommands defaults true.
-func resolveState(sources []*settings) state {
-	enabled := resolve(sources, func(s *settings) *bool { return s.Sandbox.Enabled })
-	allow := resolve(sources, func(s *settings) *bool { return s.Sandbox.AllowUnsandboxedCommands })
-
+func stateFromKeys(enabled, allow *bool) state {
 	switch {
 	case enabled == nil || !*enabled:
 		return stateOff

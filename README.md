@@ -170,8 +170,24 @@ release workflow and has not been altered since.
 ```text
 boxed              # print the styled label for the resolved state
 boxed state        # print the bare token: on | partial | off (unstyled)
+boxed doctor       # print the resolved state and which settings source it came from
 boxed --version    # print the embedded version
 boxed --help       # usage
+```
+
+### Diagnosing a resolved state
+
+`boxed doctor` prints the resolved state plus provenance. When the managed
+tier decided the outcome, it reports that as a single unit — the managed
+fail-safe combines whole states (see above), not individual keys. Otherwise it
+names, per key, which settings file supplied the value, or that no source set
+it and the schema default applies:
+
+```text
+$ boxed doctor
+state: on
+sandbox.enabled: true (/Users/example/project/.claude/settings.local.json)
+sandbox.allowUnsandboxedCommands: false (/Users/example/.claude/settings.json)
 ```
 
 ### Customizing the label

@@ -10,14 +10,15 @@ import (
 )
 
 // fixtureEnv points resolution at a temp project tree with the given
-// settings.json body.
-func fixtureEnv(t *testing.T, body string) {
+// settings.json body, and returns the project directory.
+func fixtureEnv(t *testing.T, body string) string {
 	t.Helper()
 	dir := t.TempDir()
 	require.NoError(t, os.MkdirAll(dir+"/.claude", 0o755))
 	require.NoError(t, os.WriteFile(dir+"/.claude/settings.json", []byte(body), 0o644))
 	t.Setenv("CLAUDE_PROJECT_DIR", dir)
 	t.Setenv("HOME", "/nonexistent")
+	return dir
 }
 
 // The flag matching the resolved state supplies the rendered output.
