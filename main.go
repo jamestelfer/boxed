@@ -40,11 +40,27 @@ func projectDir(env func(string) string, getwd func() (string, error)) string {
 	return d
 }
 
+// env resolves the project and home directories used to locate settings files.
+func env() (proj, home string) {
+	proj = projectDir(os.Getenv, os.Getwd)
+	home, _ = os.UserHomeDir()
+	return proj, home
+}
+
 // currentState resolves the effective sandbox state from the environment.
 func currentState() state {
-	proj := projectDir(os.Getenv, os.Getwd)
-	home, _ := os.UserHomeDir()
+	proj, home := env()
 	return resolveStatus(rootFS(), proj, home)
+}
+
+// rejectArgs errors out with a standard message if the command was given a
+// positional argument it doesn't accept.
+func rejectArgs(cmd *cli.Command) error {
+	if cmd.Args().Present() {
+		fmt.Fprintf(os.Stderr, "boxed: unexpected argument %q\n", cmd.Args().First())
+		return errReported
+	}
+	return nil
 }
 
 // newCommand builds the root urfave/cli v3 command.
@@ -59,9 +75,8 @@ func newCommand() *cli.Command {
 			&cli.StringFlag{Name: "off", Usage: "format string for the 'off' (not sandboxed) state"},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
-			if cmd.Args().Present() {
-				fmt.Fprintf(os.Stderr, "boxed: unexpected argument %q\n", cmd.Args().First())
-				return errReported
+			if err := rejectArgs(cmd); err != nil {
+				return err
 			}
 			s := currentState()
 			out, err := render(s, cmd.String(s.String()))
@@ -77,11 +92,34 @@ func newCommand() *cli.Command {
 				Name:  "state",
 				Usage: "print the bare resolved state token (on|partial|off), unstyled",
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					if cmd.Args().Present() {
-						fmt.Fprintf(os.Stderr, "boxed: unexpected argument %q\n", cmd.Args().First())
-						return errReported
+					if err := rejectArgs(cmd); err != nil {
+						return err
 					}
 					fmt.Println(currentState())
+					return nil
+				},
+			},
+			{
+				Name:  "doctor",
+				Usage: "print the resolved state and which settings source it came from",
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					if err := rejectArgs(cmd); err != nil {
+						return err
+					}
+					proj, home := env()
+					s, managed, keys := determineState(rootFS(), proj, home)
+					fmt.Printf("state: %s\n", s)
+					if managed {
+						fmt.Println("source: managed")
+						return nil
+					}
+					for _, k := range keys {
+						if k.value == nil {
+							fmt.Printf("%s: unset (default)\n", k.key)
+							continue
+						}
+						fmt.Printf("%s: %v (%s)\n", k.key, *k.value, k.origin)
+					}
 					return nil
 				},
 			},
