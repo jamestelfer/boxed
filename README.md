@@ -46,6 +46,9 @@ boxed \
   --off '[☢️ NOT sandboxed](bold red)'
 ```
 
+![The three default labels rendered in colour: a green "📦 sandboxed", a yellow
+"😬 sandbox (escape allowed)", and a bold-red "☢️ NOT sandboxed".](docs/boxed-defaults.png)
+
 ## Quickstart
 
 Install it with [mise](https://mise.jdx.dev/) (see [Installation](#installation)
