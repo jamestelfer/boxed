@@ -83,12 +83,16 @@ the flag matching the **resolved** state has any effect; the others are ignored,
 and any omitted flag keeps its default.
 
 ```sh
-# Compact glyphs instead of the default text labels
+# Custom text labels tuned for a cramped statusline
 boxed \
-  --on '[●](green)' \
-  --partial '[◐](yellow)' \
-  --off '[○](bold red)'
+  --on '[boxed](green)' \
+  --partial '[boxed: escapable](yellow)' \
+  --off '[UNBOXED](bold red)'
 ```
+
+Style only earns its keep on text. An emoji already carries its own colour and
+meaning, so wrapping a bare emoji in a style adds nothing — prefer `--off '☢️'`
+over `--off '[☢️](red)'`.
 
 A format string is literal text plus `[text](style)` groups — no nesting, no
 variables. Style tokens: `bold`, `italic`, `underline`, `dimmed`, `inverted`,
@@ -119,12 +123,13 @@ Both consume the same starship configuration: [starship](https://starship.rs/)
 renders it through its Claude Code statusline integration, and
 [cship.dev](https://cship.dev/) falls through to your `starship.toml`. Add a
 [`custom`](https://starship.rs/config/#custom-commands) module that runs `boxed`
-with your chosen labels and passes its already-styled output straight through:
+and passes its already-styled output straight through (append your own
+`--on/--partial/--off` to override the defaults):
 
 ```toml
 # ~/.config/starship.toml
 [custom.sandbox]
-command = "boxed --on '[📦](green)' --partial '[😬](yellow)' --off '[☢️](bold red)'"
+command = "boxed"
 when = true
 format = "$output "
 shell = ["bash", "--noprofile", "--norc"]
@@ -153,12 +158,11 @@ printf '[%s] 📁 %s  %s\n' "$model" "${dir##*/}" "$(boxed)"
 
 ### Shell scripts
 
-Anything that builds a prompt or statusline can shell out to `boxed`. Usually you
-just call it with your labels and drop the styled output straight in:
+Anything that builds a prompt or statusline can shell out to `boxed` and drop the
+styled output straight in — pass `--on/--partial/--off` to override any label:
 
 ```sh
-sandbox=$(boxed --on '[📦](green)' --partial '[😬](yellow)' --off '[☢️](bold red)')
-printf '%s  %s\n' "$sandbox" "${PWD##*/}"
+printf '%s  %s\n' "$(boxed --off '[UNBOXED](bold red)')" "${PWD##*/}"
 ```
 
 If you'd rather branch on the state yourself — changing surrounding text rather
