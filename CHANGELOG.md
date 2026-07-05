@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/jamestelfer/boxed/compare/v1.0.0...v1.1.0) (2026-07-04)
+
+
+### Features
+
+* add --on/--partial/--off format overrides ([#16](https://github.com/jamestelfer/boxed/issues/16)) ([6eaa2be](https://github.com/jamestelfer/boxed/commit/6eaa2be36daff00fa4381e377c49aa41ee714cff))
+* add 'boxed state' subcommand printing the bare token ([#14](https://github.com/jamestelfer/boxed/issues/14)) ([61b6c83](https://github.com/jamestelfer/boxed/commit/61b6c835abc9a638b144aa79491f6c87a28704c6))
+* merge managed-settings.d drop-ins and fail safe on conflict ([#12](https://github.com/jamestelfer/boxed/issues/12)) ([ffb9dee](https://github.com/jamestelfer/boxed/commit/ffb9dee368d6dddd85e9f4858b201b6b09b3c55a))
+* read file-based managed-settings.json below the MDM plist ([#11](https://github.com/jamestelfer/boxed/issues/11)) ([3f6d7d6](https://github.com/jamestelfer/boxed/commit/3f6d7d621ae4d669bf646c3aace7e3859f2149f8))
+* render via a starship-style format parser and lipgloss v2 ([#15](https://github.com/jamestelfer/boxed/issues/15)) ([c55357f](https://github.com/jamestelfer/boxed/commit/c55357fb552ff7c1df21da804b1f560ebcbec342))
+* wrap execution in a urfave/cli v3 command with --version ([#13](https://github.com/jamestelfer/boxed/issues/13)) ([fb564d4](https://github.com/jamestelfer/boxed/commit/fb564d4ad546b6017b1a2c5d857ba07c19af9def))
+
 ## 1.0.0 (2026-07-04)
 
 
