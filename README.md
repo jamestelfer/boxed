@@ -26,43 +26,51 @@ calls `boxed` for the sandbox segment.
 ## The three states
 
 There are exactly three states, and the same three tokens — `on`, `partial`,
-`off` — name them everywhere: in the label, in `boxed state`, and in the
-`--on/--partial/--off` flags.
+`off` — name them everywhere: in the resolved label, in the
+`--on/--partial/--off` flags, and in `boxed state`.
 
-| State | Default label | Color | Meaning |
-| --- | --- | --- | --- |
-| `on` | `📦 sandboxed` | green | sandbox enabled **and** unsandboxed commands disallowed |
-| `partial` | `😬 sandbox (escape allowed)` | yellow | enabled, but unsandboxed commands allowed (the schema default) |
-| `off` | `☢️ NOT sandboxed` | bold red | disabled or unset |
+| State | Meaning |
+| --- | --- |
+| `on` | sandbox enabled **and** unsandboxed commands disallowed |
+| `partial` | enabled, but unsandboxed commands allowed (the schema default) |
+| `off` | disabled or unset |
+
+Each state renders as a colored label. The defaults are exactly what you get by
+running `boxed` with the format flags below — and passing your own is the
+primary way to use the tool:
+
+```sh
+boxed \
+  --on '[📦 sandboxed](green)' \
+  --partial '[😬 sandbox (escape allowed)](yellow)' \
+  --off '[☢️ NOT sandboxed](bold red)'
+```
 
 ## Quickstart
 
-Install it (see [Installation](#installation) for every method):
+Install it with [mise](https://mise.jdx.dev/) (see [Installation](#installation)
+for every other method):
 
 ```sh
-curl -fsSL https://github.com/jamestelfer/boxed/releases/latest/download/install.sh | sh
+mise use -g github:jamestelfer/boxed
 ```
 
-Run it — from a project directory, so it can see that project's settings:
+Run it from a project directory, so it can see that project's settings:
+
+```console
+$ boxed
+📦 sandboxed
+```
+
+Then drop it into whatever renders your statusline. The simplest wiring is a
+shell snippet that calls `boxed` for the sandbox segment:
 
 ```sh
-boxed          # 📦 sandboxed   (styled label for the resolved state)
-boxed state    # on             (bare token, no color)
+printf '%s  %s\n' "$(boxed)" "${PWD##*/}"
 ```
 
-Then wire it into your statusline. For [starship](https://starship.rs/):
-
-```toml
-# ~/.config/starship.toml
-[custom.sandbox]
-command = "boxed"
-when = ''' test "$(boxed state)" != "off" '''
-format = "[$output]($style) "
-shell = ["bash", "--noprofile", "--norc"]
-```
-
-That's the whole tool. The rest of this document is customization, wiring
-recipes, and how the resolution actually works.
+That's the whole tool. The rest of this document covers customization, real
+statusline recipes, and how the resolution actually works.
 
 ## Configuration
 
@@ -92,41 +100,66 @@ use `boxed state`.
 
 ## Using it in a statusline
 
-`boxed` is a segment provider. Wire it into whatever owns your statusline.
+`boxed` is a segment provider — it emits one styled label and exits. Wire it
+into whatever owns your statusline.
 
 > **Note:** `boxed` does **not** read stdin. Claude Code hands its `statusLine`
 > command a JSON blob on stdin (session, model, cwd, …); `boxed` ignores it and
 > resolves the sandbox state from settings files itself. So pointing Claude
 > Code's `statusLine` directly at `boxed` would replace your entire statusline
-> with just the sandbox segment. Instead, compose it into a real statusline tool
-> — the examples below — and let that tool own the line.
+> with just the sandbox segment. Compose it into a statusline that reads that
+> stdin and owns the line — the recipes below.
 
-### starship
+### starship (and cship.dev)
 
-Add a [`custom`](https://starship.rs/config/#custom-commands) module. Use
-`boxed state` in `when` to skip the segment entirely when there is no sandbox,
-and render the styled label as the output:
+Both consume the same starship configuration: [starship](https://starship.rs/)
+renders it through its Claude Code statusline integration, and
+[cship.dev](https://cship.dev/) falls through to your `starship.toml`. Add a
+[`custom`](https://starship.rs/config/#custom-commands) module that runs `boxed`
+with your chosen labels and passes its already-styled output straight through:
 
 ```toml
 # ~/.config/starship.toml
 [custom.sandbox]
-command = "boxed"
-when = ''' test "$(boxed state)" != "off" '''
-format = "[$output]($style) "
+command = "boxed --on '[📦](green)' --partial '[😬](yellow)' --off '[☢️](bold red)'"
+when = true
+format = "$output "
 shell = ["bash", "--noprofile", "--norc"]
 ```
 
-### cship.dev
+### Claude Code statusLine wrapper
 
-[cship.dev](https://cship.dev/) composes a Claude Code statusline from command
-segments. Add a segment whose command is `boxed`; its stdout becomes the segment
-text. Use `boxed state` if you'd rather have cship branch on the token than
-render the styled label.
+Without starship, follow the [Claude Code statusline
+docs](https://code.claude.com/docs/en/statusline) and point `statusLine` at your
+own script. The script reads Claude's JSON on stdin (keeping model, cwd, and the
+rest) and calls `boxed` for the sandbox segment:
+
+```bash
+#!/usr/bin/env bash
+# ~/.claude/statusline.sh
+input=$(cat)
+model=$(printf '%s' "$input" | jq -r '.model.display_name')
+dir=$(printf '%s' "$input" | jq -r '.workspace.current_dir')
+
+printf '[%s] 📁 %s  %s\n' "$model" "${dir##*/}" "$(boxed)"
+```
+
+```json
+{ "statusLine": { "type": "command", "command": "~/.claude/statusline.sh" } }
+```
 
 ### Shell scripts
 
-Anything that builds a prompt or statusline can shell out to `boxed`. Branch on
-the bare token and supply your own styling:
+Anything that builds a prompt or statusline can shell out to `boxed`. Usually you
+just call it with your labels and drop the styled output straight in:
+
+```sh
+sandbox=$(boxed --on '[📦](green)' --partial '[😬](yellow)' --off '[☢️](bold red)')
+printf '%s  %s\n' "$sandbox" "${PWD##*/}"
+```
+
+If you'd rather branch on the state yourself — changing surrounding text rather
+than the label — read the bare token from `boxed state`:
 
 ```sh
 case "$(boxed state)" in
