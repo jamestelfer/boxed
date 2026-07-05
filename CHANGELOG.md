@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/jamestelfer/boxed/compare/v1.1.0...v1.2.0) (2026-07-05)
+
+
+### Features
+
+* add 'boxed doctor' subcommand ([#19](https://github.com/jamestelfer/boxed/issues/19)) ([a608235](https://github.com/jamestelfer/boxed/commit/a6082350a04d86b77b97d0fb19391a3d2e2b9712))
+
 ## [1.1.0](https://github.com/jamestelfer/boxed/compare/v1.0.0...v1.1.0) (2026-07-04)
 
 
