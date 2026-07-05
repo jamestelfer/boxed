@@ -200,9 +200,9 @@ flag keeps its default.
 ```sh
 # Compact icons instead of the default text labels
 boxed \
-  --on '[🔒](green)' \
-  --partial '[⚠️](yellow)' \
-  --off '[🔓](bold red)'
+  --on '[●](green)' \
+  --partial '[◐](yellow)' \
+  --off '[○](bold red)'
 ```
 
 A format string is literal text plus `[text](style)` groups (no nesting, no
