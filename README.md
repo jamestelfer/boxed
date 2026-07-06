@@ -1,12 +1,14 @@
 # boxed
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/boxed-logo-dark.png">
+  <img src="docs/boxed-logo-light.png" alt="boxed logo" width="100">
+</picture>
 
 **Is Claude Code actually sandboxed right now?** `boxed` answers that in one
 glance. It prints the effective Claude Code sandbox status as a short, colored
 label — green when you're boxed in, red when you're not.
 
-```text
-📦 sandboxed
-```
+<img src="docs/boxed-defaults.png" alt="The three default labels rendered in colour: a green &quot;📦 sandboxed&quot;, a yellow &quot;😬 sandbox (escape allowed)&quot;, and a bold-red &quot;☢️ NOT sandboxed&quot;." width="40%">
 
 ## Why you want this
 
@@ -45,9 +47,6 @@ boxed \
   --partial '[😬 sandbox (escape allowed)](yellow)' \
   --off '[☢️ NOT sandboxed](bold red)'
 ```
-
-![The three default labels rendered in colour: a green "📦 sandboxed", a yellow
-"😬 sandbox (escape allowed)", and a bold-red "☢️ NOT sandboxed".](docs/boxed-defaults.png)
 
 ## Quickstart
 
