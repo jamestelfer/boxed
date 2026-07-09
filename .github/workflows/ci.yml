@@ -78,6 +78,11 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
 
+      - uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', 'go.sum') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
       - name: Build flake package
         run: |
           set -uo pipefail
