@@ -7,7 +7,10 @@
   "packages": {
     ".": {
       "release-type": "go",
-      "draft": true
+      "draft": true,
+      "extra-files": [
+        "flake.nix"
+      ]
     }
   }
 }
