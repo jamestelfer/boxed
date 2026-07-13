@@ -67,3 +67,67 @@ jobs:
       - uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v9
         with:
           version: v${{ steps.tool-versions.outputs.golangci-lint }}
+
+  flake:
+    name: Nix flake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+
+      - uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock', 'go.sum') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+
+      - name: Build flake package
+        run: |
+          set -uo pipefail
+
+          log="$(mktemp)"
+          if nix build .#boxed --print-build-logs 2>&1 | tee "${log}"; then
+            exit 0
+          fi
+
+          # Build failed. A fixed-output derivation hash mismatch means the Go
+          # dependency closure changed but vendorHash in flake.nix was not
+          # updated to match. Anything else is a genuine build failure.
+          if ! grep -q 'hash mismatch in fixed-output derivation' "${log}"; then
+            echo "::error::Nix build failed for a reason unrelated to vendorHash. See the build log above." >&2
+            exit 1
+          fi
+
+          got="$(grep -oE 'got:[[:space:]]+sha256-[A-Za-z0-9+/]{43}=' "${log}" \
+            | grep -oE 'sha256-[A-Za-z0-9+/]{43}=' | tail -n1)"
+
+          {
+            echo '### Nix flake build failed: `vendorHash` mismatch'
+            echo
+            echo 'The Go dependency closure (go.mod / go.sum) no longer matches the'
+            echo '`vendorHash` pinned in `flake.nix`.'
+            echo
+            if [[ -n "${got}" ]]; then
+              echo '**If you intentionally changed dependencies**, adopt the new hash in `flake.nix`:'
+              echo
+              echo '```nix'
+              echo "vendorHash = \"${got}\";"
+              echo '```'
+            else
+              echo '**If you intentionally changed dependencies**, update `vendorHash` in `flake.nix`.'
+              echo 'The corrected hash could not be parsed automatically — read it from the'
+              echo '`got:` line in the build log above.'
+            fi
+            echo
+            echo '**If you did NOT change dependencies, do not blindly adopt this hash.**'
+            echo 'An unexpected mismatch can indicate a compromised or tampered dependency.'
+            echo 'Investigate the change to go.mod / go.sum before trusting it.'
+          } | tee -a "${GITHUB_STEP_SUMMARY}" >&2
+
+          echo "::error::vendorHash mismatch. See the job summary for the corrected hash and guidance." >&2
+          exit 1
+
+      - name: Check flake
+        run: nix flake check --print-build-logs
