@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/jamestelfer/boxed/compare/v1.2.0...v1.3.0) (2026-07-13)
+
+
+### Features
+
+* add Nix flake for building with nix build ([#24](https://github.com/jamestelfer/boxed/issues/24)) ([c59338e](https://github.com/jamestelfer/boxed/commit/c59338ee38f125720a9a53a473a67812821a38f0))
+
 ## [1.2.0](https://github.com/jamestelfer/boxed/compare/v1.1.0...v1.2.0) (2026-07-05)
 
 
