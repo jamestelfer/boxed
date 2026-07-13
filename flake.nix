@@ -22,9 +22,19 @@
 
             vendorHash = "sha256-tvyLq3Bi+xniB5/QhW1qu16d3VhPb4J5J9ls5OVAWAs=";
 
-            # Inject the package version so `boxed --version` matches the Nix
-            # build (GoReleaser does the same via -X for release binaries).
-            ldflags = [ "-X main.version=${version}" ];
+            # Keep in sync with the ldflags in .goreleaser.yaml so `nix build`
+            # produces the same stripped binary and version metadata as a
+            # release build. -trimpath is already passed by buildGoModule.
+            # commit/date are omitted: they would break Nix's reproducibility
+            # and buildVersion() degrades gracefully without them.
+            ldflags = [
+              "-w"
+              "-s"
+              "-X main.version=${version}"
+            ];
+
+            # Match .goreleaser.yaml (CGO_ENABLED=0): a static, cgo-free binary.
+            env.CGO_ENABLED = 0;
 
             meta = {
               description = "Prints the effective Claude Code sandbox status as a colored statusline label";
