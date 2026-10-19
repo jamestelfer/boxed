@@ -180,8 +180,8 @@ esac
 ## Installation
 
 Every release ships provenance-attested archives, a self-contained install
-script, and a Homebrew cask. All download paths can be verified — see
-[Verifying releases](#verifying-releases).
+script, a Homebrew cask, and a Nix package. All download paths can be verified
+— see [Verifying releases](#verifying-releases).
 
 <details>
 <summary><strong>mise (recommended)</strong></summary>
@@ -233,6 +233,15 @@ sh install.sh
 
 ```sh
 brew install jamestelfer/tap/boxed
+```
+
+</details>
+
+<details>
+<summary><strong>Nix</strong></summary>
+
+```sh
+nix profile install github:jamestelfer/nixpkgs#boxed
 ```
 
 </details>

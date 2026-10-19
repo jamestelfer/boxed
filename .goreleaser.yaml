@@ -75,3 +75,15 @@ homebrew_casks:
           run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ "{{staged_path}}" }}/boxed"]
         end
       end
+
+nix:
+  - name: boxed
+    repository:
+      owner: jamestelfer
+      name: nixpkgs
+      token: "{{ .Env.NIX_GITHUB_TOKEN }}"
+    # skip publishing the recipe on a prerelease, as for the cask.
+    skip_upload: auto
+    homepage: "https://github.com/jamestelfer/boxed"
+    description: "CLI that shows Claude Code's configured sandbox status as a colour-coded statusline segment."
+    license: "asl20"
