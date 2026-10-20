@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.2](https://github.com/jamestelfer/boxed/compare/v1.3.1...v1.3.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* **ci:** publish a Nix recipe ([#41](https://github.com/jamestelfer/boxed/issues/41)) ([b1e3d88](https://github.com/jamestelfer/boxed/commit/b1e3d88da58291555463d9fc74600f4e8af6cb0b))
+* **deps:** pin dependencies ([#32](https://github.com/jamestelfer/boxed/issues/32)) ([1fafc4e](https://github.com/jamestelfer/boxed/commit/1fafc4e8e0b0048a9e17e53c9268cc8a527b39d4))
+* **deps:** update go runtime ([#35](https://github.com/jamestelfer/boxed/issues/35)) ([31e6849](https://github.com/jamestelfer/boxed/commit/31e684995db1b1c6a5c9873f746468e972632e57))
+* **deps:** update mise packages ([#36](https://github.com/jamestelfer/boxed/issues/36)) ([574c0d4](https://github.com/jamestelfer/boxed/commit/574c0d4620bfcea5d253f7405891edb4ebd52df5))
+
 ## [1.3.1](https://github.com/jamestelfer/boxed/compare/v1.3.0...v1.3.1) (2026-10-11)
 
 
