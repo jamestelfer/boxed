@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.3](https://github.com/jamestelfer/boxed/compare/v1.3.2...v1.3.3) (2026-11-12)
+
+
+### Bug Fixes
+
+* **deps:** pin jamestelfer/.github action to 25fc00f ([#44](https://github.com/jamestelfer/boxed/issues/44)) ([acb4675](https://github.com/jamestelfer/boxed/commit/acb4675b6c6d8765c6744dde057eb9fdd1eb47dc))
+* **deps:** update dependency go to v1.27.3 ([#45](https://github.com/jamestelfer/boxed/issues/45)) ([163254a](https://github.com/jamestelfer/boxed/commit/163254a7de222de1860557bfd142855c7989c6c5))
+* **deps:** update dependency go to v1.27.4 ([#51](https://github.com/jamestelfer/boxed/issues/51)) ([85195e9](https://github.com/jamestelfer/boxed/commit/85195e92b9ba2e6dedecbf759139034dd724c825))
+* **deps:** update dependency goreleaser to v2.20.0 ([#48](https://github.com/jamestelfer/boxed/issues/48)) ([98518a2](https://github.com/jamestelfer/boxed/commit/98518a2233d7e99e13cf13c365e083c141d08a9d))
+* **deps:** update github actions to v7 ([#38](https://github.com/jamestelfer/boxed/issues/38)) ([2a9cf7d](https://github.com/jamestelfer/boxed/commit/2a9cf7d25d72496e4e79d0ab322da37383518985))
+* **deps:** update go dependencies ([#33](https://github.com/jamestelfer/boxed/issues/33)) ([d7891d4](https://github.com/jamestelfer/boxed/commit/d7891d49fcce10c7fe2dba94049246acf32fa15c))
+* **deps:** update go dependencies ([#47](https://github.com/jamestelfer/boxed/issues/47)) ([4be995b](https://github.com/jamestelfer/boxed/commit/4be995b6f046d376b982e69a2bf28bc875bfaedd))
+* **deps:** update jdx/mise-action action to v5 ([#40](https://github.com/jamestelfer/boxed/issues/40)) ([cbba41a](https://github.com/jamestelfer/boxed/commit/cbba41a9fe87bc81ac0b417237c5d6c1e0e14451))
+* **deps:** update mise packages ([#43](https://github.com/jamestelfer/boxed/issues/43)) ([d190298](https://github.com/jamestelfer/boxed/commit/d1902985fe61ea31372d69276ccf25746bb23d8b))
+
 ## [1.3.2](https://github.com/jamestelfer/boxed/compare/v1.3.1...v1.3.2) (2026-10-20)
 
 
