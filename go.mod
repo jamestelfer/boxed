@@ -3,7 +3,7 @@ module github.com/jamestelfer/boxed
 go 1.27
 
 require (
-	charm.land/lipgloss/v2 v2.0.6
+	charm.land/lipgloss/v2 v2.1.1
 	github.com/stretchr/testify v1.12.1
 	github.com/urfave/cli/v3 v3.14.0
 	howett.net/plist v1.0.1
@@ -22,8 +22,8 @@ require (
 	github.com/mattn/go-runewidth v0.0.31 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/xo/terminfo v1.3.0 // indirect
+	github.com/xo/terminfo v1.3.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.6 // indirect
-	golang.org/x/sync v0.24.0 // indirect
-	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
 )
